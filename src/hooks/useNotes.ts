@@ -46,22 +46,20 @@ export function useNotes(userId: string) {
       synced: false,
       user_id: userId
     }
+
     await db.put('notes', noteToSave)
 
     if (navigator.onLine) {
-
       const { synced, ...supabaseNote } = noteToSave
 
       const { data, error } = isNew
         ? await supabase.from('notes').insert(supabaseNote).select()
         : await supabase.from('notes').update(supabaseNote).eq('id', noteToSave.id).select()
 
-      if (error) {
-      } else {
+      if (!error) {
         noteToSave.synced = true
         await db.put('notes', noteToSave)
       }
-    } else {
     }
 
     await loadNotes()
@@ -73,18 +71,20 @@ export function useNotes(userId: string) {
     const note = await db.get('notes', id)
     if (!note) return
 
-    // Remove from IndexedDB completely
-    await db.delete('notes', id)
-
     if (navigator.onLine) {
-      const { error } = await supabase
+      await db.delete('notes', id)
+
+      await supabase
         .from('notes')
         .delete()
         .eq('id', id)
-
-      if (error) {
-      } else {
-      }
+    } else {
+      await db.put('notes', {
+        ...note,
+        deleted: true,
+        synced: false,
+        updated_at: new Date().toISOString()
+      })
     }
 
     await loadNotes()

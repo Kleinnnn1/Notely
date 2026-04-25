@@ -33,7 +33,7 @@ export default function NoteEditor({ content = '', onChange }: NoteEditorProps) 
             editor?.isActive('italic') ? 'bg-gray-200 text-blue-500' : 'text-gray-600'
           }`}
         >
-          I
+          Italic
         </button>
         <button
           onMouseDown={(e) => { e.preventDefault(); editor?.chain().focus().toggleStrike().run() }}

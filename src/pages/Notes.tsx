@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import { supabase } from "../lib/supabase";
 import { useNotes } from "../hooks/useNotes";
 import { useSync } from "../hooks/useSync";
@@ -13,9 +14,11 @@ export default function Notes() {
   const [content, setContent] = useState("");
 
   const { notes, loading, saveNote, deleteNote, loadNotes } = useNotes(userId);
-  useSync(userId, loadNotes);
+  useSync(userId, () => {
+    loadNotes();
+    toast.success("Notes synced");
+  });
 
-  // Get current user
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session?.user) {
@@ -37,7 +40,12 @@ export default function Notes() {
   }
 
   async function handleSave() {
-    if (!title && !content) return;
+    if (!title && !content) {
+      toast.error("Please add a title or content");
+      return;
+    }
+
+    const isNew = !selectedNote?.id;
 
     const saved = await saveNote({
       id: selectedNote?.id,
@@ -46,16 +54,52 @@ export default function Notes() {
     });
 
     setSelectedNote(saved);
+    toast.success(isNew ? "Note created" : "Note updated");
   }
 
   async function handleDelete() {
     if (!selectedNote) return;
     await deleteNote(selectedNote.id);
     handleNewNote();
+    toast.success("Note deleted");
   }
 
   async function handleLogout() {
+    if (!navigator.onLine) {
+      toast(
+        (t) => (
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-medium">You're offline</p>
+            <p className="text-xs text-gray-500">
+              Unsynced notes may be lost. Sign out anyway?
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={async () => {
+                  toast.dismiss(t.id);
+                  await supabase.auth.signOut();
+                  window.location.href = "/login";
+                }}
+                className="text-xs bg-red-500 text-white px-3 py-1 rounded"
+              >
+                Sign out anyway
+              </button>
+              <button
+                onClick={() => toast.dismiss(t.id)}
+                className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded"
+              >
+                Stay
+              </button>
+            </div>
+          </div>
+        ),
+        { duration: 8000 },
+      );
+      return;
+    }
+
     await supabase.auth.signOut();
+    toast.success("Signed out");
     window.location.href = "/login";
   }
 
@@ -71,7 +115,7 @@ export default function Notes() {
         />
         <button
           onClick={handleLogout}
-          className="m-4 text-sm text-gray-400 hover:text-red-400 transition-colors"
+          className="ml-auto mr-4 mt-4 mb-4 block w-[30%] bg-red-500 text-white text-sm py-2 rounded-lg hover:bg-red-600 transition-colors"
         >
           Sign out
         </button>
@@ -99,12 +143,12 @@ export default function Notes() {
             {selectedNote && (
               <button
                 onClick={handleDelete}
-                className="bg-red-500 px-3 py-1.5 rounded-lg text-sm hover:bg-red-600"
+                className="bg-red-400 px-3 py-1.5 rounded-lg text-sm hover:bg-red-500"
               >
                 Delete
               </button>
             )}
-          </div>  
+          </div>
 
           {/* Editor */}
           <div className="flex-1 overflow-y-auto px-6 pb-6">

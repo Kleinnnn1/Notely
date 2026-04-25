@@ -1,39 +1,49 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 export default function StatusBar() {
-  const [isOnline, setIsOnline] = useState(navigator.onLine)
-  const [showBanner, setShowBanner] = useState(false)
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   useEffect(() => {
     function handleOnline() {
-      setIsOnline(true)
-      setShowBanner(true)
-      setTimeout(() => setShowBanner(false), 3000) // hide after 3s
+      setIsOnline(true);
+      toast.success("Back online — syncing notes", { id: "network" });
     }
 
     function handleOffline() {
-      setIsOnline(false)
-      setShowBanner(true)
+      setIsOnline(false);
+      toast("Offline — saving locally", {
+        id: "network",
+        icon: "📴",
+        style: {
+          background: "#374151",
+          color: "#fff",
+        },
+      });
     }
 
-    window.addEventListener('online', handleOnline)
-    window.addEventListener('offline', handleOffline)
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     return () => {
-      window.removeEventListener('online', handleOnline)
-      window.removeEventListener('offline', handleOffline)
-    }
-  }, [])
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
-  if (!showBanner && isOnline) return null
-
+  // Small persistent indicator in corner
   return (
     <div
-      className={`fixed bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full text-sm text-white shadow-lg transition-all z-50 ${
-        isOnline ? 'bg-green-500' : 'bg-gray-700'
+      className={`fixed bottom-4 left-4 flex items-center gap-1.5 text-xs px-2 py-1 rounded-full ${
+        isOnline ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-500"
       }`}
     >
-      {isOnline ? '☁️ Back online — syncing...' : '📴 Offline — saving locally'}
+      <div
+        className={`w-1.5 h-1.5 rounded-full ${
+          isOnline ? "bg-green-500" : "bg-gray-400"
+        }`}
+      />
+      {isOnline ? "Online" : "Offline"}
     </div>
-  )
+  );
 }
