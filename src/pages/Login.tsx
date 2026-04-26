@@ -26,54 +26,66 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-gray-800 mb-1">Welcome back</h1>
-        <p className="text-gray-400 text-sm mb-6">Sign in to your Notely account</p>
+    <div className="min-h-screen flex items-center justify-center bg-[#fafafa]">
+      <div className="w-full max-w-md px-4">
 
-        {error && (
-          <div className="bg-red-50 text-red-500 text-sm px-4 py-2 rounded-md mb-4">
-            {error}
+        <div className="text-center mb-8">
+          <div className="flex justify-center gap-2 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-[#F5E6C8] border-2 border-[#1a1a1a] shadow-[3px_3px_0px_#1a1a1a] rotate-[-8deg]" />
+            <div className="w-10 h-10 rounded-xl bg-[#B8E8E0] border-2 border-[#1a1a1a] shadow-[3px_3px_0px_#1a1a1a]" />
+            <div className="w-10 h-10 rounded-xl bg-[#F5C8C8] border-2 border-[#1a1a1a] shadow-[3px_3px_0px_#1a1a1a] rotate-[8deg]" />
           </div>
-        )}
+          <h1 className="text-4xl font-black text-[#1a1a1a]">Notely</h1>
+          <p className="text-[#888] text-sm mt-1">level up your note taking</p>
+        </div>
 
-        <form onSubmit={handleLogin} className="flex flex-col gap-4">
-          <div>
-            <label className="text-sm text-gray-600 mb-1 block">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              required
-              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-          </div>
+        <div className="bg-white border-2 border-[#1a1a1a] rounded-2xl shadow-[6px_6px_0px_#1a1a1a] p-8">
+          <h2 className="text-2xl font-black text-[#1a1a1a] mb-6">Sign in</h2>
 
-          <div>
-            <label className="text-sm text-gray-600 mb-1 block">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-          </div>
+          {error && (
+            <div className="bg-[#F5C8C8] border-2 border-[#1a1a1a] rounded-xl px-4 py-2 text-sm text-[#1a1a1a] mb-4">
+              {error}
+            </div>
+          )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-blue-500 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-600 disabled:opacity-50"
-          >
-            {loading ? 'Signing in...' : 'Sign in'}
-          </button>
-        </form>
+          <form onSubmit={handleLogin} className="flex flex-col gap-4">
+            <div>
+              <label className="text-sm font-bold text-[#1a1a1a] mb-1 block">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                required
+                className="w-full border-2 border-[#1a1a1a] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:bg-[#F5E6C8] transition-colors"
+              />
+            </div>
 
-        <p className="text-sm text-gray-400 text-center mt-6">
+            <div>
+              <label className="text-sm font-bold text-[#1a1a1a] mb-1 block">Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                className="w-full border-2 border-[#1a1a1a] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:bg-[#F5E6C8] transition-colors"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="bg-[#1a1a1a] text-white py-3 rounded-xl text-sm font-bold hover:bg-[#333] disabled:opacity-50 shadow-[3px_3px_0px_#888] active:shadow-none active:translate-y-0.5 transition-all"
+            >
+              {loading ? 'Signing in...' : 'Sign in →'}
+            </button>
+          </form>
+        </div>
+
+        <p className="text-sm text-[#888] text-center mt-4">
           No account?{' '}
-          <Link to="/register" className="text-blue-500 hover:underline">
+          <Link to="/register" className="font-bold text-[#1a1a1a] hover:underline">
             Register
           </Link>
         </p>

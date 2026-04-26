@@ -5,15 +5,19 @@ import { useNotes } from "../hooks/useNotes";
 import { useSync } from "../hooks/useSync";
 import NoteList from "../components/NoteList";
 import NoteEditor from "../components/NoteEditor";
-import StatusBar from "../components/StatusBar";
+
+type Tab = "notes" | "editor";
 
 export default function Notes() {
   const [userId, setUserId] = useState("");
   const [selectedNote, setSelectedNote] = useState<any>(null);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [activeTab, setActiveTab] = useState<Tab>("notes");
 
-  const { notes, loading, saveNote, deleteNote, loadNotes } = useNotes(userId);
+  const { notes, saveNote, deleteNote, loadNotes } = useNotes(userId);
   useSync(userId, () => {
     loadNotes();
     toast.success("Notes synced");
@@ -25,18 +29,41 @@ export default function Notes() {
         setUserId(data.session.user.id);
       }
     });
+
+    function handleOnline() {
+      setIsOnline(true);
+      toast.success("Back online — syncing notes", { id: "network" });
+    }
+
+    function handleOffline() {
+      setIsOnline(false);
+      toast("Offline — saving locally", {
+        id: "network",
+        icon: "📴",
+        style: { background: "#374151", color: "#fff" },
+      });
+    }
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
   }, []);
 
   function handleSelectNote(note: any) {
     setSelectedNote(note);
     setTitle(note.title);
     setContent(note.content);
+    setActiveTab("editor"); // auto switch to editor on mobile
   }
 
   function handleNewNote() {
     setSelectedNote(null);
     setTitle("");
     setContent("");
+    setActiveTab("editor"); // auto switch to editor on mobile
   }
 
   async function handleSave() {
@@ -46,13 +73,7 @@ export default function Notes() {
     }
 
     const isNew = !selectedNote?.id;
-
-    const saved = await saveNote({
-      id: selectedNote?.id,
-      title,
-      content,
-    });
-
+    const saved = await saveNote({ id: selectedNote?.id, title, content });
     setSelectedNote(saved);
     toast.success(isNew ? "Note created" : "Note updated");
   }
@@ -60,117 +81,176 @@ export default function Notes() {
   async function handleDelete() {
     if (!selectedNote) return;
     await deleteNote(selectedNote.id);
-    handleNewNote();
+    setSelectedNote(null);
+    setTitle("");
+    setContent("");
+    setActiveTab("notes"); // go back to list after delete
     toast.success("Note deleted");
   }
 
-  async function handleLogout() {
-    if (!navigator.onLine) {
-      toast(
-        (t) => (
-          <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium">You're offline</p>
-            <p className="text-xs text-gray-500">
-              Unsynced notes may be lost. Sign out anyway?
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={async () => {
-                  toast.dismiss(t.id);
-                  await supabase.auth.signOut();
-                  window.location.href = "/login";
-                }}
-                className="text-xs bg-red-500 text-white px-3 py-1 rounded"
-              >
-                Sign out anyway
-              </button>
-              <button
-                onClick={() => toast.dismiss(t.id)}
-                className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded"
-              >
-                Stay
-              </button>
-            </div>
-          </div>
-        ),
-        { duration: 8000 },
-      );
-      return;
-    }
+  function handleLogout() {
+    setShowLogoutModal(true);
+  }
 
+  async function confirmLogout() {
     await supabase.auth.signOut();
     toast.success("Signed out");
     window.location.href = "/login";
   }
 
-  return (
-    <div className="flex h-screen bg-white">
-      {/* Sidebar */}
-      <div className="w-72 border-r flex flex-col">
-        <NoteList
-          notes={notes}
-          selectedId={selectedNote?.id}
-          onSelect={handleSelectNote}
-          onNewNote={handleNewNote}
-        />
+  const sidebarContent = (
+    <div className="flex flex-col h-full bg-[#fafafa]">
+      <NoteList
+        notes={notes}
+        selectedId={selectedNote?.id}
+        onSelect={handleSelectNote}
+        onNewNote={handleNewNote}
+      />
+      <div className="p-4 border-t-2 border-[#1a1a1a] flex items-center justify-between gap-2">
+        <div
+          className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded-full shrink-0 ${
+            isOnline
+              ? "bg-green-100 text-green-600"
+              : "bg-gray-100 text-gray-500"
+          }`}
+        >
+          <div
+            className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+              isOnline ? "bg-green-500" : "bg-gray-400"
+            }`}
+          />
+          {isOnline ? "Online" : "Offline"}
+        </div>
         <button
           onClick={handleLogout}
-          className="ml-auto mr-4 mt-4 mb-4 block w-[30%] bg-red-500 text-white text-sm py-2 rounded-lg hover:bg-red-600 transition-colors"
+          className="text-sm font-bold bg-red-500 text-white px-4 py-2 rounded-xl shadow-[2px_2px_0px_#888] active:shadow-none active:translate-y-0.5 transition-all hover:bg-red-600 shrink-0"
         >
           Sign out
         </button>
       </div>
+    </div>
+  );
 
-      {/* Editor area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <>
-          {/* Title + actions */}
-          <div className="flex items-center gap-3 px-6 pt-6 pb-2">
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Note title..."
-              className="flex-1 text-2xl font-bold text-gray-800 focus:outline-none placeholder-gray-300"
-            />
-            <button
-              onClick={handleSave}
-              disabled={!userId}
-              className="bg-blue-500 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-blue-600 disabled:opacity-50"
-            >
-              {userId ? "Save" : "Loading..."}
-            </button>
-            {selectedNote && (
-              <button
-                onClick={handleDelete}
-                className="bg-red-400 px-3 py-1.5 rounded-lg text-sm hover:bg-red-500"
-              >
-                Delete
-              </button>
-            )}
-          </div>
-
-          {/* Editor */}
-          <div className="flex-1 overflow-y-auto px-6 pb-6">
-            {!selectedNote && !title && !content ? (
-              <div className="flex flex-col items-center justify-center h-full text-gray-300 gap-2">
-                <span className="text-5xl">📝</span>
-                <p className="text-sm">
-                  Click <strong>+ New</strong> and start typing
-                </p>
-              </div>
-            ) : (
-              <NoteEditor
-                key={selectedNote?.id ?? "new"}
-                content={content}
-                onChange={setContent}
-              />
-            )}
-          </div>
-        </>
+  const editorContent = (
+    <div className="flex flex-col h-full bg-white">
+      <div className="flex items-center gap-3 px-4 md:px-6 pt-4 md:pt-6 pb-4 border-b-2 border-[#1a1a1a]">
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Note title..."
+          className="flex-1 text-xl md:text-3xl font-black text-[#1a1a1a] focus:outline-none placeholder-gray-200 bg-transparent"
+        />
+        <button
+          onClick={handleSave}
+          disabled={!userId}
+          className="bg-[#1a1a1a] text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-[#333] disabled:opacity-50 shadow-[3px_3px_0px_#888] active:shadow-none active:translate-y-0.5 transition-all cursor-pointer disabled:cursor-not-allowed"
+        >
+          {userId ? "Save" : "..."}
+        </button>
+        {selectedNote && (
+          <button
+            onClick={handleDelete}
+            className="bg-[#F5C8C8] text-[#1a1a1a] px-3 py-2 rounded-xl text-sm font-bold border-2 border-[#1a1a1a] shadow-[3px_3px_0px_#1a1a1a] active:shadow-none active:translate-y-0.5 transition-all cursor-pointer"
+          >
+            Delete
+          </button>
+        )}
       </div>
 
-      <StatusBar />
+      <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-6">
+        {!selectedNote && !title && !content ? (
+          <div className="flex flex-col items-center justify-center h-full gap-4">
+            <div className="flex gap-2">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-[#F5E6C8] border-2 border-[#1a1a1a] shadow-[3px_3px_0px_#1a1a1a] rotate-[-8deg]" />
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-[#B8E8E0] border-2 border-[#1a1a1a] shadow-[3px_3px_0px_#1a1a1a]" />
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-[#F5C8C8] border-2 border-[#1a1a1a] shadow-[3px_3px_0px_#1a1a1a] rotate-[8deg]" />
+            </div>
+            <p className="text-[#888] text-sm font-medium text-center">
+              Click <strong className="text-[#1a1a1a]">+ New</strong> and start
+              typing
+            </p>
+          </div>
+        ) : (
+          <NoteEditor
+            key={selectedNote?.id ?? "new"}
+            content={content}
+            onChange={setContent}
+          />
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="flex flex-col h-screen bg-[#fafafa]">
+
+      <div className="hidden md:flex flex-1 overflow-hidden">
+
+        <div className="w-72 border-r-2 border-[#1a1a1a] flex flex-col">
+          {sidebarContent}
+        </div>
+        <div className="flex-1 overflow-hidden">{editorContent}</div>
+      </div>
+
+      <div className="flex md:hidden flex-1 flex-col overflow-hidden">
+        {/* Tab content */}
+        <div className="flex-1 overflow-hidden">
+          {activeTab === "notes" ? sidebarContent : editorContent}
+        </div>
+
+        <div className="border-t-2 border-[#1a1a1a] flex bg-[#fafafa]">
+          <button
+            onClick={() => setActiveTab("notes")}
+            className={`flex-1 py-3 text-sm font-bold transition-colors ${
+              activeTab === "notes"
+                ? "bg-[#1a1a1a] text-white"
+                : "text-[#888] hover:text-[#1a1a1a]"
+            }`}
+          >
+            Notes {notes.length > 0 && `(${notes.length})`}
+          </button>
+          <button
+            onClick={() => setActiveTab("editor")}
+            className={`flex-1 py-3 text-sm font-bold transition-colors border-l-2 border-[#1a1a1a] ${
+              activeTab === "editor"
+                ? "bg-[#1a1a1a] text-white"
+                : "text-[#888] hover:text-[#1a1a1a]"
+            }`}
+          >
+            Editor
+          </button>
+        </div>
+      </div>
+
+      {showLogoutModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white border-2 border-[#1a1a1a] rounded-2xl shadow-[6px_6px_0px_#1a1a1a] p-6 w-full max-w-sm mx-4">
+            <h2 className="text-xl font-black text-[#1a1a1a] text-center mb-2">
+              Sign out?
+            </h2>
+            <p className="text-sm text-[#888] text-center mb-6">
+              {!isOnline
+                ? "You're offline. Unsynced notes may be lost if you sign out."
+                : "Are you sure you want to sign out of Notely?"}
+            </p>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={confirmLogout}
+                className="w-full py-3 text-sm font-bold bg-red-500 text-white rounded-xl border-2 border-[#1a1a1a] shadow-[3px_3px_0px_#1a1a1a] active:shadow-none active:translate-y-0.5 transition-all hover:bg-red-600"
+              >
+                Sign out
+              </button>
+              <button
+                onClick={() => setShowLogoutModal(false)}
+                className="w-full py-3 text-sm font-bold text-[#888] rounded-xl border-2 border-[#e0e0e0] hover:border-[#1a1a1a] hover:text-[#1a1a1a] transition-all"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,5 +1,26 @@
 @import "tailwindcss";
 
+:root {
+  --yellow: #f5e6c8;
+  --mint: #b8e8e0;
+  --pink: #f5c8c8;
+  --dark: #1a1a1a;
+  --text: #2d2d2d;
+  --text-light: #888;
+  --border: #e0e0e0;
+  --white: #ffffff;
+  --shadow: 4px 4px 0px #1a1a1a;
+}
+
+* {
+  font-family: "Inter", sans-serif;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #fafafa;
+}
+
 .ProseMirror:focus {
   outline: none;
 }
@@ -12,10 +33,6 @@
 
 .ProseMirror ul li {
   margin: 0.25rem 0;
-}
-
-.ProseMirror:focus {
-  outline: none;
 }
 
 .ProseMirror ol {
