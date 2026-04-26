@@ -52,7 +52,7 @@ export function useNotes(userId: string) {
     if (navigator.onLine) {
       const { synced, ...supabaseNote } = noteToSave
 
-      const { data, error } = isNew
+      const { error } = isNew
         ? await supabase.from('notes').insert(supabaseNote).select()
         : await supabase.from('notes').update(supabaseNote).eq('id', noteToSave.id).select()
 
