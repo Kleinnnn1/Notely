@@ -14,6 +14,7 @@ export default function Register() {
     general?: string;
   }>({});
   const [loading, setLoading] = useState(false);
+  const [registered, setRegistered] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -72,10 +73,50 @@ export default function Register() {
         setErrors({ general: error.message });
       }
     } else {
-      navigate("/notes");
+      setRegistered(true);
     }
 
     setLoading(false);
+  }
+
+  // Success screen
+  if (registered) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#fafafa]">
+        <div className="w-full max-w-md px-4">
+          <div className="text-center mb-8">
+            <div className="flex justify-center gap-2 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-[#F5E6C8] border-2 border-[#1a1a1a] shadow-[3px_3px_0px_#1a1a1a] rotate-[-8deg]" />
+              <div className="w-10 h-10 rounded-xl bg-[#B8E8E0] border-2 border-[#1a1a1a] shadow-[3px_3px_0px_#1a1a1a]" />
+              <div className="w-10 h-10 rounded-xl bg-[#F5C8C8] border-2 border-[#1a1a1a] shadow-[3px_3px_0px_#1a1a1a] rotate-[8deg]" />
+            </div>
+            <h1 className="text-4xl font-black text-[#1a1a1a]">Notely</h1>
+          </div>
+
+          <div className="bg-white border-2 border-[#1a1a1a] rounded-2xl shadow-[6px_6px_0px_#1a1a1a] p-8 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-[#B8E8E0] border-2 border-[#1a1a1a] shadow-[3px_3px_0px_#1a1a1a] flex items-center justify-center text-2xl mx-auto mb-4">
+              ✉️
+            </div>
+            <h2 className="text-2xl font-black text-[#1a1a1a] mb-2">
+              Check your email
+            </h2>
+            <p className="text-sm text-[#888] mb-2">
+              We sent a confirmation link to
+            </p>
+            <p className="text-sm font-bold text-[#1a1a1a] mb-6">{email}</p>
+            <p className="text-xs text-[#888] mb-6">
+              Click the link in the email to activate your account then sign in.
+            </p>
+            <Link
+              to="/login"
+              className="block w-full bg-[#1a1a1a] text-white py-3 rounded-xl text-sm font-bold hover:bg-[#333] shadow-[3px_3px_0px_#888] active:shadow-none transition-all text-center"
+            >
+              Go to Sign in →
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -148,7 +189,6 @@ export default function Register() {
                     : "border-[#1a1a1a] focus:bg-[#F5E6C8]"
                 }`}
               />
-
               {password.length > 0 && (
                 <div className="mt-1.5 flex gap-1">
                   {[...Array(4)].map((_, i) => (
