@@ -9,6 +9,7 @@ export default function Login() {
   const [remember, setRemember] = useState(true);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -17,12 +18,25 @@ export default function Login() {
       }
     });
 
-    // Pre-fill email if remembered
     const savedEmail = localStorage.getItem("notely-remember-email");
     if (savedEmail) {
       setEmail(savedEmail);
       setRemember(true);
     }
+
+    function handleOnline() {
+      setIsOnline(true);
+    }
+    function handleOffline() {
+      setIsOnline(false);
+    }
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
   }, []);
 
   async function handleLogin(e: React.FormEvent) {
@@ -66,6 +80,16 @@ export default function Login() {
         <div className="bg-white border-2 border-[#1a1a1a] rounded-2xl shadow-[6px_6px_0px_#1a1a1a] p-8">
           <h2 className="text-2xl font-black text-[#1a1a1a] mb-6">Sign in</h2>
 
+          {/* Offline warning */}
+          {!isOnline && (
+            <div className="bg-[#F5E6C8] border-2 border-[#1a1a1a] rounded-xl px-4 py-3 text-sm text-[#1a1a1a] mb-4 flex items-center gap-2">
+              <span>📴</span>
+              <p className="font-medium">
+                You're offline. Please connect to the internet to sign in.
+              </p>
+            </div>
+          )}
+
           {error && (
             <div className="bg-[#F5C8C8] border-2 border-[#1a1a1a] rounded-xl px-4 py-2 text-sm text-[#1a1a1a] mb-4">
               {error}
@@ -83,7 +107,8 @@ export default function Login() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 required
-                className="w-full border-2 border-[#1a1a1a] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:bg-[#F5E6C8] transition-colors"
+                disabled={!isOnline}
+                className="w-full border-2 border-[#1a1a1a] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:bg-[#F5E6C8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
 
@@ -97,7 +122,8 @@ export default function Login() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
-                className="w-full border-2 border-[#1a1a1a] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:bg-[#F5E6C8] transition-colors"
+                disabled={!isOnline}
+                className="w-full border-2 border-[#1a1a1a] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:bg-[#F5E6C8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
 
@@ -128,8 +154,8 @@ export default function Login() {
 
             <button
               type="submit"
-              disabled={loading}
-              className="bg-[#1a1a1a] text-white py-3 rounded-xl text-sm font-bold hover:bg-[#333] disabled:opacity-50 shadow-[3px_3px_0px_#888] active:shadow-none active:translate-y-0.5 transition-all"
+              disabled={loading || !isOnline}
+              className="bg-[#1a1a1a] text-white py-3 rounded-xl text-sm font-bold hover:bg-[#333] disabled:opacity-50 disabled:cursor-not-allowed shadow-[3px_3px_0px_#888] active:shadow-none active:translate-y-0.5 transition-all"
             >
               {loading ? "Signing in..." : "Sign in →"}
             </button>
