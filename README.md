@@ -12,7 +12,6 @@ A modern, responsive note-taking application showcasing seamless note creation, 
 - **Service Worker**: Intelligent caching strategy for fast load times and offline functionality
 - **User Authentication**: Secure login and registration with Supabase
 - **Toast Notifications**: Real-time user feedback with react-hot-toast
-- **Dark Theme**: Modern design with smooth navigation and user experience
 - **TypeScript**: Type-safe codebase for better development experience
 
 ## Tech Stack
@@ -128,6 +127,7 @@ src/
 ## Author
 
 Kenneth Jhun N. Balino
+
 Full Stack Developer
 
 Built with React, Vite, and Tailwind CSS
