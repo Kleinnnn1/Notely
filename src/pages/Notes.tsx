@@ -84,7 +84,7 @@ export default function Notes() {
     setSelectedNote(null);
     setTitle("");
     setContent("");
-    setActiveTab("notes"); // go back to list after delete
+    setActiveTab("notes");
     toast.success("Note deleted");
   }
 
