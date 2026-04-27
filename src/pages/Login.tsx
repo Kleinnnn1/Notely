@@ -1,34 +1,58 @@
-import { useState } from 'react'
-import { supabase } from '../lib/supabase'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabase";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Login() {
-  const navigate = useNavigate()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(true);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        navigate("/notes");
+      }
+    });
+
+    // Pre-fill email if remembered
+    const savedEmail = localStorage.getItem("notely-remember-email");
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRemember(true);
+    }
+  }, []);
 
   async function handleLogin(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
+    e.preventDefault();
+    setLoading(true);
+    setError("");
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-
-    if (error) {
-      setError(error.message)
+    if (remember) {
+      localStorage.setItem("notely-remember-email", email);
     } else {
-      navigate('/notes')
+      localStorage.removeItem("notely-remember-email");
     }
 
-    setLoading(false)
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      setError(error.message);
+    } else {
+      navigate("/notes");
+    }
+
+    setLoading(false);
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#fafafa]">
       <div className="w-full max-w-md px-4">
-
         <div className="text-center mb-8">
           <div className="flex justify-center gap-2 mb-4">
             <div className="w-10 h-10 rounded-xl bg-[#F5E6C8] border-2 border-[#1a1a1a] shadow-[3px_3px_0px_#1a1a1a] rotate-[-8deg]" />
@@ -50,7 +74,9 @@ export default function Login() {
 
           <form onSubmit={handleLogin} className="flex flex-col gap-4">
             <div>
-              <label className="text-sm font-bold text-[#1a1a1a] mb-1 block">Email</label>
+              <label className="text-sm font-bold text-[#1a1a1a] mb-1 block">
+                Email
+              </label>
               <input
                 type="email"
                 value={email}
@@ -62,7 +88,9 @@ export default function Login() {
             </div>
 
             <div>
-              <label className="text-sm font-bold text-[#1a1a1a] mb-1 block">Password</label>
+              <label className="text-sm font-bold text-[#1a1a1a] mb-1 block">
+                Password
+              </label>
               <input
                 type="password"
                 value={password}
@@ -73,23 +101,51 @@ export default function Login() {
               />
             </div>
 
+            {/* Remember me */}
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <div
+                onClick={() => setRemember(!remember)}
+                className={`w-5 h-5 rounded-md border-2 border-[#1a1a1a] flex items-center justify-center transition-colors shrink-0 ${
+                  remember ? "bg-[#1a1a1a]" : "bg-white"
+                }`}
+              >
+                {remember && (
+                  <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                    <path
+                      d="M1 4L3.5 6.5L9 1"
+                      stroke="white"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                )}
+              </div>
+              <span className="text-sm font-medium text-[#444]">
+                Remember my email
+              </span>
+            </label>
+
             <button
               type="submit"
               disabled={loading}
               className="bg-[#1a1a1a] text-white py-3 rounded-xl text-sm font-bold hover:bg-[#333] disabled:opacity-50 shadow-[3px_3px_0px_#888] active:shadow-none active:translate-y-0.5 transition-all"
             >
-              {loading ? 'Signing in...' : 'Sign in →'}
+              {loading ? "Signing in..." : "Sign in →"}
             </button>
           </form>
         </div>
 
         <p className="text-sm text-[#888] text-center mt-4">
-          No account?{' '}
-          <Link to="/register" className="font-bold text-[#1a1a1a] hover:underline">
+          No account?{" "}
+          <Link
+            to="/register"
+            className="font-bold text-[#1a1a1a] hover:underline"
+          >
             Register
           </Link>
         </p>
       </div>
     </div>
-  )
+  );
 }

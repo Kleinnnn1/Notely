@@ -56,14 +56,14 @@ export default function Notes() {
     setSelectedNote(note);
     setTitle(note.title);
     setContent(note.content);
-    setActiveTab("editor"); // auto switch to editor on mobile
+    setActiveTab("editor");
   }
 
   function handleNewNote() {
     setSelectedNote(null);
     setTitle("");
     setContent("");
-    setActiveTab("editor"); // auto switch to editor on mobile
+    setActiveTab("editor");
   }
 
   async function handleSave() {
@@ -133,29 +133,31 @@ export default function Notes() {
 
   const editorContent = (
     <div className="flex flex-col h-full bg-white">
-      <div className="flex items-center gap-3 px-4 md:px-6 pt-4 md:pt-6 pb-4 border-b-2 border-[#1a1a1a]">
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Note title..."
-          className="flex-1 text-xl md:text-3xl font-black text-[#1a1a1a] focus:outline-none placeholder-gray-200 bg-transparent"
-        />
-        <button
-          onClick={handleSave}
-          disabled={!userId}
-          className="bg-[#1a1a1a] text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-[#333] disabled:opacity-50 shadow-[3px_3px_0px_#888] active:shadow-none active:translate-y-0.5 transition-all cursor-pointer disabled:cursor-not-allowed"
-        >
-          {userId ? "Save" : "..."}
-        </button>
-        {selectedNote && (
+      <div className="px-4 md:px-6 pt-4 md:pt-6 pb-4 border-b-2 border-[#1a1a1a]">
+        <div className="flex items-center gap-3">
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Note title..."
+            className="flex-1 text-xl md:text-3xl font-black text-[#1a1a1a] focus:outline-none placeholder-gray-200 bg-transparent min-w-0"
+          />
           <button
-            onClick={handleDelete}
-            className="bg-[#F5C8C8] text-[#1a1a1a] px-3 py-2 rounded-xl text-sm font-bold border-2 border-[#1a1a1a] shadow-[3px_3px_0px_#1a1a1a] active:shadow-none active:translate-y-0.5 transition-all cursor-pointer"
+            onClick={handleSave}
+            disabled={!userId}
+            className="bg-[#1a1a1a] text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-[#333] disabled:opacity-50 shadow-[3px_3px_0px_#888] active:shadow-none active:translate-y-0.5 transition-all shrink-0"
           >
-            Delete
+            {userId ? "Save" : "..."}
           </button>
-        )}
+          {selectedNote && (
+            <button
+              onClick={handleDelete}
+              className="bg-[#F5C8C8] text-[#1a1a1a] px-3 py-2 rounded-xl text-sm font-bold border-2 border-[#1a1a1a] shadow-[3px_3px_0px_#1a1a1a] active:shadow-none active:translate-y-0.5 transition-all shrink-0"
+            >
+              Delete
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-6">
@@ -184,9 +186,7 @@ export default function Notes() {
 
   return (
     <div className="flex flex-col h-screen bg-[#fafafa]">
-
       <div className="hidden md:flex flex-1 overflow-hidden">
-
         <div className="w-72 border-r-2 border-[#1a1a1a] flex flex-col">
           {sidebarContent}
         </div>
@@ -194,7 +194,6 @@ export default function Notes() {
       </div>
 
       <div className="flex md:hidden flex-1 flex-col overflow-hidden">
-        {/* Tab content */}
         <div className="flex-1 overflow-hidden">
           {activeTab === "notes" ? sidebarContent : editorContent}
         </div>
