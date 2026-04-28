@@ -93,7 +93,14 @@ export default function Notes() {
   }
 
   async function confirmLogout() {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {
+    }
+
+    localStorage.removeItem("notely_session");
+    localStorage.removeItem("notely-remember-email");
+
     toast.success("Signed out");
     window.location.href = "/login";
   }

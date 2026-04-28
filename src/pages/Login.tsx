@@ -83,7 +83,6 @@ export default function Login() {
           {/* Offline warning */}
           {!isOnline && (
             <div className="bg-[#F5E6C8] border-2 border-[#1a1a1a] rounded-xl px-4 py-3 text-sm text-[#1a1a1a] mb-4 flex items-center gap-2">
-              <span>📴</span>
               <p className="font-medium">
                 You're offline. Please connect to the internet to sign in.
               </p>
